@@ -1,74 +1,106 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Platform, Button, Pressable, TouchableOpacity } from 'react-native';
+import MapView from 'react-native-maps';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { NaverMapView, NaverMapMarkerOverlay } from "@mj-studio/react-native-naver-map";
+import * as Location from "expo-location";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+export default function Map() {
 
-export default function HomeScreen() {
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const {granted} = await Location.requestForegroundPermissionsAsync();
+
+        /**
+         * Note: Foreground permissions should be granted before asking for the background permissions
+         * (your app can't obtain background permission without foreground permission).
+        */
+        if(granted) {
+          await Location.requestBackgroundPermissionsAsync();
+        }
+
+      } catch(e) {
+        console.log(`Location request has been failed: ${e}`);
+      }
+    })
+  }, [])
+
+  if(Platform.OS === "web") {
+    return (
+      <View>
+        <Text>지도를 사용할 수 없습니다. 웹에서는 Google Maps를 사용하세요.</Text>
+      </View>
+    );
+  }
+
+  const initRegion = {
+    latitude: 37.5665,
+    longitude: 126.9780,
+    latitudeDelta: 0.03,
+    longitudeDelta: 0.03,
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      {/* <TouchableOpacity style={styles.locationContainer} onPress={initLocation}>
+            <View style={styles.locationButton}>
+              <MaterialIcons name="my-location" size={30} color="black" />
+            </View>
+          </TouchableOpacity> */}
+      <NaverMapView 
+        style={styles.container}
+        mapType={'Basic'}
+        layerGroups={{
+          BUILDING: true,
+          BICYCLE: false,
+          CADASTRAL: false,
+          MOUNTAIN: false,
+          TRAFFIC: false,
+          TRANSIT: false,
+        }}
+        initialRegion={initRegion}
+        locale={'ko'}
+        onInitialized={() => {
+          return console.log('initialized!');
+        }}>
+
+      </NaverMapView>
+      
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  map: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  locationContainer: {
+    position: "absolute",
+    bottom: "3%",   // 하단에서 20px 거리
+    right: "3%",    // 우측에서 20px 거리
+    zIndex: 1, 
   },
+  locationButton: {
+    width: 40,
+    height: 40,
+    backgroundColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 5,
+    shadowColor: '#000', // 그림자 효과 추가
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5, // 안드로이드에서 그림자 효과
+  }
+
 });
